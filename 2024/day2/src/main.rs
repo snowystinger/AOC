@@ -39,7 +39,18 @@ fn is_report_safe(report: Vec<i32>) -> bool {
     return true;
 }
 
-fn analyze_data(data: String) -> i32 {
+fn try_to_make_safe(report: Vec<i32>) -> bool {
+    for (pos, _item) in report.iter().enumerate() {
+        let mut new_report = report.clone();
+        new_report.remove(pos);
+        if is_report_safe(new_report) {
+            return true;
+        }
+    }
+    return false;
+}
+
+fn analyze_data(data: String) -> (i32, i32) {
     let lines: Split<'_, &str> = data.split("\n");
     let lin_count = lines.clone().count();
     let reports: Vec<Vec<i32>> = lines.map(|x| {
@@ -50,15 +61,22 @@ fn analyze_data(data: String) -> i32 {
     }).collect();
 
     let mut unsafe_tally = 0;
+    let mut xtra_unsafe_tally = 0;
     for report in reports {
-        let safe = is_report_safe(report.clone());
+        let mut safe = is_report_safe(report.clone());
+        if safe {
+            continue;
+        }
 
+        unsafe_tally += 1;
+
+        safe = try_to_make_safe(report.clone());
         if !safe {
-            unsafe_tally += 1;
+            xtra_unsafe_tally += 1;
         }
     }
 
-    return (lin_count - unsafe_tally).try_into().unwrap();
+    return ((lin_count - unsafe_tally).try_into().unwrap(), (lin_count - xtra_unsafe_tally).try_into().unwrap());
 }
 
 #[cfg(test)]
@@ -72,7 +90,7 @@ mod tests {
         d.push("test-data/input.txt");
         let contents: String = fs::read_to_string(d).expect("Something went wrong reading the file");
         let result = analyze_data(contents);
-        println!("Result Q1: {}", result);
+        println!("Result Q1: {}\nResult Q2: {}", result.0, result.1);
     }
 
     #[test]
@@ -102,5 +120,15 @@ mod tests {
         assert_eq!(is_report_safe(vec![1, 3, 2, 4, 5]), false);
         assert_eq!(is_report_safe(vec![8, 6, 4, 4, 1]), false);
         assert_eq!(is_report_safe(vec![1, 3, 6, 7, 9]), true);
+    }
+
+    #[test]
+    fn test_try_to_make_safe() {
+        assert_eq!(try_to_make_safe(vec![7, 6, 4, 2, 1]), true);
+        assert_eq!(try_to_make_safe(vec![1, 2, 7, 8, 9]), false);
+        assert_eq!(try_to_make_safe(vec![9, 7, 6, 2, 1]), false);
+        assert_eq!(try_to_make_safe(vec![1, 3, 2, 4, 5]), true);
+        assert_eq!(try_to_make_safe(vec![8, 6, 4, 4, 1]), true);
+        assert_eq!(try_to_make_safe(vec![1, 3, 6, 7, 9]), true);
     }
 }
