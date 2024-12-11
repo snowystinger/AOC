@@ -60,6 +60,7 @@ fn analyze_data_2(data: String) -> i64 {
                         .map(|n| n.parse::<i64>().unwrap());
                     let results = iter::repeat_n(vec!['+'.to_string(), '*'.to_string(), "||".to_string()], values.clone().count() - 1)
                         .multi_cartesian_product()
+                        // could make this more efficient by just using a find instead of finding all combinations, but i read the question wrong initially
                         .filter_map(|operations| {
                             let mut values_copy = values.clone();
                             let mut result = values_copy.next().unwrap();
@@ -118,7 +119,7 @@ mod tests {
         let result2 = analyze_data_2(contents.clone());
         println!("Result Q1: {}\nResult Q2: {}", result, result2);
         assert_eq!(result, 2299996598890);
-        assert_eq!(result2, 0);
+        assert_eq!(result2, 0362646859298554);
     }
 
     #[test]
